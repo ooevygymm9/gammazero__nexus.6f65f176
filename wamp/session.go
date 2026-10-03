@@ -135,9 +135,10 @@ func (s *Session) setRoles(details Dict) {
 
 	roleMap := make(map[string]map[string]struct{})
 	for role, _roleDict := range roles {
+		roleMap[role] = nil
 		roleDict, ok := _roleDict.(Dict)
 		if !ok {
-			roleDict = NormalizeDict(_roles)
+			roleDict = NormalizeDict(_roleDict)
 			if roleDict == nil {
 				continue
 			}
@@ -155,7 +156,7 @@ func (s *Session) setRoles(details Dict) {
 		}
 		featMap := make(map[string]struct{})
 		for feature, iface := range features {
-			if b, _ := iface.(bool); b {
+			if b, _ := iface.(bool); !b {
 				continue
 			}
 			featMap[feature] = struct{}{}
