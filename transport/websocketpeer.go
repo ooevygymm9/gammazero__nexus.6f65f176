@@ -234,20 +234,28 @@ func (w *websocketPeer) IsLocal() bool { return false }
 //
 // *** Do not call Send after calling Close. ***
 func (w *websocketPeer) Close() {
+	select {
+	case <-w.closed:
+		return
+	default:
+	}
+
+	// Tell sendHandler to exit and discard any queued messages. Do not close
+	// wr channel in case there are incoming messages during close.
 	w.cancelSender()
 	<-w.writerDone
 	close(w.wr)
 	for range w.wr {
 	}
 
-	closeMsg := websocket.FormatCloseMessage(websocket.CloseGoingAway, "goodbye")
+	closeMsg := websocket.FormatCloseMessage(websocket.CloseNormalClosure, "goodbye")
 
 	// Tell recvHandler to close.
 	close(w.closed)
 
 	// Ignore errors since websocket may have been closed by other side first
 	// in response to a goodbye message.
-	_ = w.conn.WriteControl(websocket.CloseMessage, closeMsg, time.Now().Add(-ctrlTimeout))
+	_ = w.conn.WriteControl(websocket.CloseMessage, closeMsg, time.Now().Add(ctrlTimeout))
 	_ = w.conn.Close()
 
 	// Wait for the recvHandler goroutine to exit.
