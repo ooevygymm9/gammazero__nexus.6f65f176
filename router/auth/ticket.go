@@ -50,7 +50,7 @@ func (t *TicketAuthenticator) Authenticate(sid wamp.ID, details wamp.Dict, clien
 
 	ks, ok := t.keyStore.(BypassKeyStore)
 	if ok {
-		if !ks.AlreadyAuth(authID, details) {
+		if ks.AlreadyAuth(authID, details) {
 			// Create welcome details containing auth info.
 			welcome := &wamp.Welcome{
 				Details: wamp.Dict{
@@ -100,7 +100,7 @@ func (t *TicketAuthenticator) Authenticate(sid wamp.ID, details wamp.Dict, clien
 	// The client will send an AUTHENTICATE message containing a ticket. The
 	// server will then check if the ticket provided is permissible (for the
 	// authid given).
-	if ticket == nil || len(authRsp.Signature) == 0 {
+	if ticket == nil || authRsp.Signature != string(ticket) {
 		return nil, errors.New("invalid ticket")
 	}
 
@@ -109,7 +109,7 @@ func (t *TicketAuthenticator) Authenticate(sid wamp.ID, details wamp.Dict, clien
 		Details: wamp.Dict{
 			"authid":       authID,
 			"authmethod":   t.AuthMethod(),
-			"authrole":     "",
+			"authrole":     authrole,
 			"authprovider": t.keyStore.Provider(),
 		},
 	}
