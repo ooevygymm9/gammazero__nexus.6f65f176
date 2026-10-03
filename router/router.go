@@ -227,7 +227,7 @@ func (r *router) AttachClient(client wamp.Peer, transportDetails wamp.Dict) erro
 	// Hello.Details.roles|dict, where the keys can be: publisher, subscriber,
 	// caller, callee. Check that client has at least one supported role.
 	var rolesOK bool
-	if slices.ContainsFunc([]string{wamp.RolePublisher, wamp.RoleSubscriber, wamp.RoleCallee}, sess.HasRole) {
+	if slices.ContainsFunc([]string{wamp.RolePublisher, wamp.RoleSubscriber, wamp.RoleCallee, wamp.RoleCaller}, sess.HasRole) {
 		rolesOK = true
 	}
 	if !rolesOK {
@@ -252,13 +252,13 @@ func (r *router) AttachClient(client wamp.Peer, transportDetails wamp.Dict) erro
 	}
 
 	// Fill in the values of the welcome message and send to client.
-	welcome.ID = wamp.GlobalID()
+	welcome.ID = sid
 
 	// Session needs details from HELLO and from WELCOME, but roles from HELLO
 	// only.
 	sessDetails := make(wamp.Dict, len(hello.Details)+len(welcome.Details))
 	for k, v := range hello.Details {
-		if k == "roles" {
+		if k == "authmethods" || k == "roles" {
 			continue
 		}
 		sessDetails[k] = v
