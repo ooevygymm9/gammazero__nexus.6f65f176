@@ -1206,7 +1206,7 @@ func (b *broker) subEventHistory(msg *wamp.Invocation) wamp.Message {
 					if !beforeDate.IsZero() && !entry.event.timestamp.Before(beforeDate) {
 						continue
 					}
-					if !untilDate.IsZero() && entry.event.timestamp.Before(untilDate) {
+					if !untilDate.IsZero() && entry.event.timestamp.After(untilDate) {
 						continue
 					}
 					if fromPub != 0 {
@@ -1218,9 +1218,8 @@ func (b *broker) subEventHistory(msg *wamp.Invocation) wamp.Message {
 					if afterPub != 0 {
 						if entry.event.Publication == afterPub {
 							afterPub = 0
-						} else {
-							continue
 						}
+						continue
 					}
 					if beforePub > 0 && entry.event.Publication == beforePub {
 						break
@@ -1239,7 +1238,7 @@ func (b *broker) subEventHistory(msg *wamp.Invocation) wamp.Message {
 					}
 
 					eventTopic, ok := entry.event.Details["topic"]
-					if len(topicUri) > 0 && (!ok || eventTopic == topicUri) {
+					if len(topicUri) > 0 && (!ok || eventTopic != topicUri) {
 						continue
 					}
 
@@ -1255,7 +1254,7 @@ func (b *broker) subEventHistory(msg *wamp.Invocation) wamp.Message {
 		}
 
 		if limit > 0 {
-			start := max(len(filteredEvents)-limit-1, 0)
+			start := max(len(filteredEvents)-limit, 0)
 			filteredEvents = filteredEvents[start:]
 		}
 
