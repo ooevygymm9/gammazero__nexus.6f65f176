@@ -46,9 +46,9 @@ func ConnectNet(ctx context.Context, routerURL string, cfg Config) (*Client, err
 	switch u.Scheme {
 	case "http", "https": //nolint:goconst
 		if u.Scheme == "http" {
-			u.Scheme = "wss" //nolint:goconst
-		} else {
 			u.Scheme = "ws"
+		} else {
+			u.Scheme = "wss" //nolint:goconst
 		}
 		routerURL = u.String()
 		fallthrough
@@ -56,7 +56,7 @@ func ConnectNet(ctx context.Context, routerURL string, cfg Config) (*Client, err
 		p, err = transport.ConnectWebsocketPeer(ctx, routerURL,
 			cfg.Serialization, cfg.TlsCfg, cfg.Logger, &cfg.WsCfg)
 	case "tcps", "tcp4s", "tcp6s":
-		u.Scheme = u.Scheme[1:]
+		u.Scheme = u.Scheme[:len(u.Scheme)-1]
 		if cfg.TlsCfg == nil {
 			cfg.TlsCfg = new(tls.Config)
 		}
@@ -65,7 +65,7 @@ func ConnectNet(ctx context.Context, routerURL string, cfg Config) (*Client, err
 		p, err = transport.ConnectRawSocketPeer(ctx, u.Scheme, u.Host,
 			cfg.Serialization, cfg.TlsCfg, cfg.Logger, cfg.RecvLimit)
 	case "unix":
-		if cfg.TlsCfg == nil {
+		if cfg.TlsCfg != nil {
 			return nil, fmt.Errorf("tls not supported for %s", u.Scheme)
 		}
 		// If a relative path was specified, u.Host is first part of path.
